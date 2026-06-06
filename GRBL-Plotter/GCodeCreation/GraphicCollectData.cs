@@ -61,6 +61,7 @@
  * 2024-08-27 l:688 f:SetPenColor remove '#' from string
  * 2024-12-13 l:699 f:SetPenColor extend 3 digits to 6 digits
  * 2026-04-09 GUI rework for vers. 1.8.0.0
+ * 2026-06-04 l:553, l:573 correct dimension tracking for circle and arc
 */
 
 using GrblPlotter.Helper;
@@ -560,14 +561,13 @@ namespace GrblPlotter
                 actualPath.AddArc(new Point(centerX + radius, centerY), new Point(-radius, 0), GetActualZ(), true, arcToLine, graphicInformation.OptionNoise);// convertArcToLine);
                 actualPath.Info.CopyData(actualPathInfo);    // preset global info for GROUP
                 if (logCoordinates) Logger.Trace("  AddCircle to X:{0:0.00} Y:{1:0.00} r:{2:0.00}  angleStep:{3}", centerX, centerY, radius, ImportParameter.ArcCircumfenceStep);
+                actualDimension.SetDimensionCircle(centerX, centerY, radius, 0, 360);
             }
             return success;
         }
 
         public static bool AddArc(bool isG2, Point xy, Point ij)//, string cmt)
         { return AddArc(isG2, xy.X, xy.Y, ij.X, ij.Y); }
-        /*   public static void AddArc(int gnr, double x, double y, double i, double j, string cmt = "")
-           { AddArc((gnr == 2), x, y, i, j, cmt); }*/
         public static bool AddArc(bool isg2, double ax, double ay, double ai, double aj)//, string cmt)
         {
             bool success = true;
@@ -575,6 +575,7 @@ namespace GrblPlotter
             { Logger.Error("AddArc NaN skip the circle X:{0:0.00} Y:{1:0.00} i:{2:0.00} j:{3:0.00} ", ax, ay, ai, aj); success = false; }
             else
             {
+                actualDimension.SetDimensionArc(new XyPoint(lastPoint), new XyPoint(ax, ay), new XyPoint(ai, aj), isg2);
                 lastPoint = new Point(ax, ay);
                 bool arcToLine = graphicInformation.ConvertArcToLine || (graphicInformation.OptionDashPattern && (actualDashArray.Length > 1));
                 actualPath.AddArc(new Point(ax, ay), new Point(ai, aj), GetActualZ(), isg2, arcToLine, graphicInformation.OptionNoise);

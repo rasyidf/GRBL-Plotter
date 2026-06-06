@@ -85,7 +85,8 @@ namespace GrblPlotter
 
         private static void ReCalcDimension(List<PathObject> graphicToReCalc)
         {
-            if (logEnable) Logger.Trace("ReCalcDimension  before  dimx:{0:0.00}  dimy:{1:0.00}", actualDimension.dimx, actualDimension.dimy);
+          //  if (logEnable) 
+                Logger.Trace("ReCalcDimension  before  dimx:{0:0.00}  dimy:{1:0.00}", actualDimension.dimx, actualDimension.dimy);
             actualDimension.ResetDimension();
             Point start;
             foreach (PathObject item in graphicToReCalc)    // dot or path
@@ -99,7 +100,7 @@ namespace GrblPlotter
                         item.Dimension.SetDimensionXY(entity.MoveTo.X, entity.MoveTo.Y);
                         if (entity is GCodeArc arcEntity)
                         {
-                            item.Dimension.SetDimensionArc(new XyPoint(start), new XyPoint(entity.MoveTo), arcEntity.CenterIJ.X, arcEntity.CenterIJ.Y, arcEntity.IsCW);
+                            item.Dimension.SetDimensionArc(new XyPoint(start), new XyPoint(entity.MoveTo), new XyPoint(arcEntity.CenterIJ), arcEntity.IsCW);
                         }
                         start = entity.MoveTo;
                     }
@@ -158,7 +159,8 @@ namespace GrblPlotter
             // 2026-03-01 seperate "move largest object to the end"
             System.Diagnostics.StackTrace s = new System.Diagnostics.StackTrace(System.Threading.Thread.CurrentThread, true);
             List<int> iLargest = new List<int>();
-            if (logEnable) Logger.Trace("...RemoveOffset before min X:{0:0.00} Y:{1:0.00} caller:{2} --------------------------------------", actualDimension.minx, actualDimension.miny, s.GetFrame(1).GetMethod().Name);
+         //   if (logEnable) 
+                Logger.Trace("...RemoveOffset before min X:{0:0.00} Y:{1:0.00} caller:{2} --------------------------------------", actualDimension.minx, actualDimension.miny, s.GetFrame(1).GetMethod().Name);
 
             PathObject item;
             for (int i = start; i < graphicToOffset.Count; i++)

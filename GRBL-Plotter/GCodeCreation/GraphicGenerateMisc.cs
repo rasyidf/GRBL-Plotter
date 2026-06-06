@@ -1051,8 +1051,8 @@ namespace GrblPlotter
                 {
                     float rdpError = 0.1f;     // 1-8
                     float fitError = (float)Properties.Settings.Default.createTextHersheySmoothCurveFittingError;     // 1-25
-                //    List<System.Numerics.Vector2> ppPts = CurvePreprocess.RdpReduce(sourcePoints, rdpError);        //preprocess(inPts, ppMode, linDist, rdpError);
-                //    CubicBezier[] curves = CurveFit.Fit(ppPts, fitError);
+                                                                                                                      //    List<System.Numerics.Vector2> ppPts = CurvePreprocess.RdpReduce(sourcePoints, rdpError);        //preprocess(inPts, ppMode, linDist, rdpError);
+                                                                                                                      //    CubicBezier[] curves = CurveFit.Fit(ppPts, fitError);
                     CubicBezier[] curves = CurveFit.Fit(sourcePoints, fitError);
 
                     PathData.Path.Clear();
@@ -1086,7 +1086,7 @@ namespace GrblPlotter
 
         private static void SortByDimension(List<PathObject> graphicToSort)
         {
-            //logSortMerge = true;
+            logSortMerge = true;
             if (logSortMerge) Logger.Trace("...SortByDimension() count:{0}", graphicToSort.Count);
 
             if (graphicToSort.Count <= 2)
@@ -1109,7 +1109,7 @@ namespace GrblPlotter
                 { SizesChar.Add(pp); continue; }
                 else if (IsEqual(graphicToSort[i].Start, graphicToSort[i].End))
                 {
-                    pp.size = (int)graphicToSort[i].Dimension.dimx * (int)graphicToSort[i].Dimension.dimy;
+                    pp.size = ((int)graphicToSort[i].Dimension.dimx * (int)graphicToSort[i].Dimension.dimy);
                     SizesClosed.Add(pp); continue;
                 }
                 else
@@ -1138,7 +1138,7 @@ namespace GrblPlotter
                     lastSize = SizesClosed[i].size;
                     SizesClosed[i] = tmp;
 
-                    if (logSortMerge) Logger.Trace("...SortByDimension() i:{0}  size:{1}, grp:{2}  type:{3}", i, lastSize, tmp.group, graphicToSort[tmp.index].Info.PathGeometry);
+                    if (logSortMerge) Logger.Trace("...SortByDimension() i:{0}  size:{1}, grp:{2}  type:{3}  {4}", i, lastSize, tmp.group, graphicToSort[tmp.index].Info.PathGeometry, graphicToSort[tmp.index].Dimension.dimx);
                 }
             }
 
@@ -1173,18 +1173,18 @@ namespace GrblPlotter
                 {
                     if (SizesClosed[i - 1].group != SizesClosed[i].group)
                     {
+                        if (logSortMerge) Logger.Trace("... new group {0}  start:{1}  end:{2}   dimx:{3}", SizesClosed[i - 1].group, lastI, i - 1, graphicToSort[SizesClosed[i - 1].index].Dimension.dimx);
                         sortedGraphic.AddRange(SortByDistance(graphicToSort, SizesClosed, lastI, i - 1, ref actualPos));
-                        if (logSortMerge) Logger.Trace("... new group {0}  start:{1}  end:{2}", SizesClosed[i - 1].group, lastI, i - 1);
                         lastI = i;
                     }
                 }
+                if (logSortMerge) Logger.Trace("... end group  start:{0}  end:{1}   dimx:{2}", lastI, SizesClosed.Count - 1, graphicToSort[SizesClosed[SizesClosed.Count - 1].index].Dimension.dimx);
                 sortedGraphic.AddRange(SortByDistance(graphicToSort, SizesClosed, lastI, SizesClosed.Count - 1, ref actualPos));
-                if (logSortMerge) Logger.Trace("... end group  start:{0}  end:{1}", lastI, SizesClosed.Count - 1);
             }
             else
             {
+                if (logSortMerge) Logger.Trace("... no group  start:{0}  end:{1}", 0, SizesClosed.Count - 1, graphicToSort[SizesClosed[SizesClosed.Count - 1].index].Dimension.dimx);
                 sortedGraphic.AddRange(SortByDistance(graphicToSort, SizesClosed, 0, SizesClosed.Count - 1, ref actualPos));
-                if (logSortMerge) Logger.Trace("... no group  start:{0}  end:{1}", 0, SizesClosed.Count - 1);
             }
 
             graphicToSort.Clear();

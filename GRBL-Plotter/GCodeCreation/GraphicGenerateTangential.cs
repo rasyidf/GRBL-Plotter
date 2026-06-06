@@ -79,7 +79,7 @@ namespace GrblPlotter
             finalPathList = new List<PathObject>();    // figures of one tile
             ItemPath tempPath;
             Point pStart, pEnd;
-            Logger.Trace("...CalculateTangentialAxis maxAngle:{0}", maxAngleChangeDeg);
+            if (showLogLine) Logger.Trace("...CalculateTangentialAxis maxAngle:{0}", maxAngleChangeDeg);
 
             foreach (PathObject graphicItem in completeGraphic)
             {
@@ -195,7 +195,7 @@ namespace GrblPlotter
                                 tempPath.StartAngle = angleArcStart;
                             }
 
-                            double diff = angleArcStart - angleLast;	// + angleOffset;
+                            double diff = angleArcStart - angleLast + angleOffset; ;	// + angleOffset;
                             /* angleOffset - track full turns of knife */
                             if (diff > Math.PI) { angleOffset -= 2 * Math.PI; }
                             else if (diff < -Math.PI) { angleOffset += 2 * Math.PI; }

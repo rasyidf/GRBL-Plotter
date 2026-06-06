@@ -33,6 +33,7 @@
  * 2024-03-02 l:157 f:GraphicInformationClass seperate processing of OptionDashPattern
  * 2026-03-02 add import options
  * 2026-04-09 GUI rework for vers. 1.8.0.0
+ * 2026-06-04 l:818 f:AddArc adapt call to Dimension.SetDimensionArc
 */
 
 using GrblPlotter.Helper;
@@ -818,12 +819,12 @@ namespace GrblPlotter
             {
                 GCodeMotion motion;
                 motion = new GCodeArc(tmp, centerIJ, isCW, dz, angStart, angEnd);
-                Dimension.SetDimensionArc(new XyPoint(End), new XyPoint(tmp), centerIJ.X, centerIJ.Y, isCW);
+                Dimension.SetDimensionArc(new XyPoint(End), new XyPoint(tmp), new XyPoint(centerIJ), isCW);
                 Path.Add(motion);
 
                 ArcProperties arcMove;
-                Point p1 = Round(End);
-                Point p2 = Round(tmp);
+                Point p1 = End;// Round(End);
+                Point p2 = tmp;// Round(tmp);
                 arcMove = GcodeMath.GetArcMoveProperties(p1, p2, centerIJ, isCW);
                 PathLength += Math.Abs(arcMove.radius * arcMove.angleDiff);           // distance from last to current point
                 End = tmp;
@@ -834,16 +835,16 @@ namespace GrblPlotter
                 GCodeMotion motion;
 
                 ArcProperties arcMove;
-                Point p1 = Round(End);
-                Point p2 = Round(tmp);
+                Point p1 = End;// Round(End);
+                Point p2 = tmp;//Round(tmp);
                 arcMove = GcodeMath.GetArcMoveProperties(p1, p2, centerIJ, isCW);
                 PathLength += Math.Abs(arcMove.radius * arcMove.angleDiff);           // distance from last to current point
-                Dimension.SetDimensionArc(new XyPoint(End), new XyPoint(tmp), centerIJ.X, centerIJ.Y, isCW);
 
                 if (!convertToLine)
                 {
                     motion = new GCodeArc(tmp, centerIJ, isCW, dz);
                     Path.Add(motion);
+                    Dimension.SetDimensionArc(new XyPoint(End), new XyPoint(tmp), new XyPoint(centerIJ), isCW);
                 }
                 else
                 {
