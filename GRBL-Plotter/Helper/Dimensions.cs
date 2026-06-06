@@ -18,24 +18,15 @@
 */
 /*
  * 2026-04-09 GUI rework for vers. 1.8.0.0
+ * 2026-06-04 l:166 f:SetDimensionArc  implement function
 */
 
-using GrblPlotter;
-using GrblPlotter.UserControls;
-using Microsoft.Win32;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Printing;
-using System.Globalization;
-using System.IO;
-using System.Text;
-using System.Threading;
 
 namespace GrblPlotter.Helper
 {
-	
+
     /// <summary>
     /// calculate overall dimensions of drawing
     /// </summary>
@@ -44,6 +35,9 @@ namespace GrblPlotter.Helper
         public double minx, maxx, miny, maxy, minz, maxz;
         public double cenx, ceny, cenz;
         public double dimx, dimy, dimz;
+
+        // Trace, Debug, Info, Warn, Error, Fatal
+    //    private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         public Dimensions(Dimensions old)
         {
@@ -56,9 +50,9 @@ namespace GrblPlotter.Helper
             dimx = old.dimx;
             dimy = old.dimy;
             dimz = old.dimz;
-			cenx = old.cenx;
-			ceny = old.ceny;
-			cenz = old.cenz;
+            cenx = old.cenx;
+            ceny = old.ceny;
+            cenz = old.cenz;
         }
 
         public Dimensions()
@@ -76,8 +70,6 @@ namespace GrblPlotter.Helper
             if (z != null) { SetDimensionZ((double)z); }
         }
 
-  //      public void SetDimensionXY(System.Windows.Point tmp)
-  //      { SetDimensionXY(tmp.X, tmp.Y); }
         public void SetDimensionXY(XyPoint tmp)
         { SetDimensionXY(tmp.X, tmp.Y); }
         public void SetDimensionXY(double? x, double? y)
@@ -92,7 +84,8 @@ namespace GrblPlotter.Helper
             minx = Math.Min(minx, value);
             maxx = Math.Max(maxx, value);
             dimx = maxx - minx;
-			cenx = (maxx + minx)/2;
+            cenx = (maxx + minx) / 2;
+            System.Diagnostics.StackTrace s = new System.Diagnostics.StackTrace(System.Threading.Thread.CurrentThread, true);
         }
         public void SetDimensionY(double value)
         {
@@ -101,7 +94,7 @@ namespace GrblPlotter.Helper
             miny = Math.Min(miny, value);
             maxy = Math.Max(maxy, value);
             dimy = maxy - miny;
-			ceny = (maxy + miny)/2;
+            ceny = (maxy + miny) / 2;
         }
         public void SetDimensionZ(double value)
         {
@@ -110,7 +103,7 @@ namespace GrblPlotter.Helper
             minz = Math.Min(minz, value);
             maxz = Math.Max(maxz, value);
             dimz = maxz - minz;
-			cenz = (maxz + minz)/2;
+            cenz = (maxz + minz) / 2;
         }
         public void OffsetXY(double x, double y)
         { minx += x; maxx += x; miny += y; maxy += y; }
@@ -125,20 +118,26 @@ namespace GrblPlotter.Helper
         {
             double end = startDeg + deltaDeg;
             double i = startDeg;
-
-            if (Math.Abs(Math.Abs(deltaDeg) - 360) < 0.00001)
+            double nx, ny;
+            if (Math.Abs(Math.Abs(deltaDeg) - 360) < 0.01)
             {
                 SetDimensionXY(x - radius, y - radius);
                 SetDimensionXY(x + radius, y + radius);
             }
             else
             {
-                SetDimensionX(x + radius * Math.Cos(i / 180 * Math.PI));
-                SetDimensionY(y + radius * Math.Sin(i / 180 * Math.PI));
-                i = end;
-                SetDimensionX(x + radius * Math.Cos(i / 180 * Math.PI));
-                SetDimensionY(y + radius * Math.Sin(i / 180 * Math.PI));
+                nx = x + radius * Math.Cos(i / 180 * Math.PI);
+                ny = y + radius * Math.Sin(i / 180 * Math.PI);
+                SetDimensionX(nx);
+                SetDimensionY(ny);
 
+                i = end;
+                nx = x + radius * Math.Cos(i / 180 * Math.PI);
+                ny = y + radius * Math.Sin(i / 180 * Math.PI);
+                SetDimensionX(nx);
+                SetDimensionY(ny);
+
+                /* get xy values for 0,90,180,270 degree if within arc */
                 for (int k = -360; k <= 360; k += 90)
                 {
                     if (deltaDeg > 0)
@@ -146,8 +145,10 @@ namespace GrblPlotter.Helper
                         if ((k > startDeg) && (k < end))
                         {
                             i = k;
-                            SetDimensionX(x + radius * Math.Cos(i / 180 * Math.PI));
-                            SetDimensionY(y + radius * Math.Sin(i / 180 * Math.PI));
+                            nx = x + radius * Math.Cos(i / 180 * Math.PI);
+                            ny = y + radius * Math.Sin(i / 180 * Math.PI);
+                            SetDimensionX(nx);
+                            SetDimensionY(ny);
                         }
                     }
                     else
@@ -155,16 +156,28 @@ namespace GrblPlotter.Helper
                         if ((k < startDeg) && (k > end))
                         {
                             i = k;
-                            SetDimensionX(x + radius * Math.Cos(i / 180 * Math.PI));
-                            SetDimensionY(y + radius * Math.Sin(i / 180 * Math.PI));
+                            nx = x + radius * Math.Cos(i / 180 * Math.PI);
+                            ny = y + radius * Math.Sin(i / 180 * Math.PI);
+                            SetDimensionX(nx);
+                            SetDimensionY(ny);
                         }
                     }
                 }
             }
         }
 
-        public void SetDimensionArc(XyPoint End,  XyPoint tmp, double X, double Y, bool isCW)
+        public void SetDimensionArc(XyPoint pStart, XyPoint pEnd, XyPoint centerIJ, bool isCW)
         {
+            ArcProperties arcMove;
+            arcMove = GcodeMath.GetArcMoveProperties(pStart, pEnd, centerIJ, isCW);
+            double startDeg = arcMove.angleStart / Math.PI * 180;
+            double endDeg = arcMove.angleEnd / Math.PI * 180;
+            double diffDeg = arcMove.angleDiff / Math.PI * 180;
+
+        //    Logger.Trace("Arc  start {0,7:0.00} {1,7:0.00}  end {2,7:0.00} {3,7:0.00}  ij {4,7:0.00} {5,7:0.00}", pStart.X, pStart.Y, pEnd.X, pEnd.Y, centerIJ.X, centerIJ.Y);
+        //    Logger.Trace("Arc  start:{0,7:0.00} end:{1,7:0.00} delta:{2,7:0.00} ", startDeg, endDeg, diffDeg);
+
+            SetDimensionCircle(arcMove.center.X, arcMove.center.Y, arcMove.radius, startDeg, diffDeg);
         }
 
         public void ResetDimension()
@@ -226,16 +239,17 @@ namespace GrblPlotter.Helper
         }
         public static bool WithinLimits(GrblPoint actualMachine, double tstx, double tsty)
         {
-      /*      double minlx = (double)Properties.ListSettings.Default.machineLimitsHomeX;
-            double maxlx = minlx + (double)Properties.ListSettings.Default.machineLimitsRangeX;
-            double minly = (double)Properties.ListSettings.Default.machineLimitsHomeY;
-            double maxly = minly + (double)Properties.ListSettings.Default.machineLimitsRangeY;
-            tstx += actualMachine.X;
-            tsty += actualMachine.Y;
-            if ((tstx < minlx) || (tstx > maxlx))
-                return false;
-            if ((tsty < minly) || (tsty > maxly))
-      */          return false;
+            /*      double minlx = (double)Properties.ListSettings.Default.machineLimitsHomeX;
+                  double maxlx = minlx + (double)Properties.ListSettings.Default.machineLimitsRangeX;
+                  double minly = (double)Properties.ListSettings.Default.machineLimitsHomeY;
+                  double maxly = minly + (double)Properties.ListSettings.Default.machineLimitsRangeY;
+                  tstx += actualMachine.X;
+                  tsty += actualMachine.Y;
+                  if ((tstx < minlx) || (tstx > maxlx))
+                      return false;
+                  if ((tsty < minly) || (tsty > maxly))
+            */
+            return false;
             return true;
         }
 

@@ -547,6 +547,8 @@ namespace GrblPlotter
                                 if ((reader["Color"] != null) && (reader["Color"].Length > 0))
                                 {
                                     string col = reader["Color"].Trim();
+                                    toolListArray[toolCnt].GroupColor = Colors.TryConvertColor(col);
+                                    /*
                                     if (col.StartsWith("#")) { col = col.Substring(1); }
                                     long clr = 0xffffffff;
                                     try
@@ -557,7 +559,7 @@ namespace GrblPlotter
                                     catch
                                     {
                                         toolListArray[toolCnt].GroupColor = Color.Black;
-                                    }
+                                    }*/
                                 }
 
                                 toolListArray[toolCnt].GroupWidth = XML.GetFloat(reader, "Width", 1);

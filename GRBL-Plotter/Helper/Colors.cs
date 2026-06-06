@@ -98,21 +98,69 @@ namespace GrblPlotter.Helper
         public static Color TryConvertColor(string txt)
         {
             Color ctmp = Color.Black;
+			if (string.IsNullOrEmpty(txt))
+				return ctmp;
+
             if (txt.Length > 1)
             {
+				if (txt.StartsWith("#"))
+					txt = txt.Substring(1);
+
 				if (txt.Contains("none"))
 					return Color.Transparent;
-				
+
+				if (txt.Contains("rgb("))
+				{
+					int start = txt.IndexOf('(') + 1;
+					int end = txt.IndexOf(')');
+					string num = txt.Substring(start, end - start).Replace('.',',');
+					string[] parts = num.Split(',');
+					if (parts.Length == 3)
+						return Color.FromArgb(255, int.Parse(parts[0].Trim()), int.Parse(parts[1].Trim()), int.Parse(parts[2].Trim()));
+				}		
+				if (txt.Contains("rgba("))
+				{
+					int start = txt.IndexOf('(') + 1;
+					int end = txt.IndexOf(')');
+					string num = txt.Substring(start, end - start).Replace('.',',');
+					string[] parts = num.Split(',');
+					if (parts.Length == 4)
+						return Color.FromArgb(int.Parse(parts[0].Trim()), int.Parse(parts[1].Trim()), int.Parse(parts[2].Trim()), int.Parse(parts[3].Trim()));
+				}		
+				if (txt.Contains("url"))
+				{
+					Logger.Warn("TryConvertColor - Color could not be converted:'{0}'",txt);
+					return ctmp;
+				}
                 ctmp = Color.FromName(txt.Trim());
                 if (ctmp.ToArgb() == 0)
                 {
-                    if (!txt.StartsWith("#"))
-                        txt = "#" + txt;
-                    ctmp = ColorTranslator.FromHtml(txt);
+					if (IsHex(txt.Trim()))
+					{	if (!txt.StartsWith("#"))
+							txt = "#" + txt;
+						ctmp = ColorTranslator.FromHtml(txt);
+					}
+					else
+						Logger.Warn("TryConvertColor - Color could not be converted:'{0}'",txt);
                 }
             }
             return ctmp;
         }
+		
+		private static bool IsHex(IEnumerable<char> chars)
+		{
+			bool isHex; 
+			foreach(var c in chars)
+			{
+				isHex = ((c >= '0' && c <= '9') || 
+						 (c >= 'a' && c <= 'f') || 
+						 (c >= 'A' && c <= 'F'));
+
+				if(!isHex)
+					return false;
+			}
+			return true;
+		}
 
         internal static PaletteEntry ExtractPaletteEntry(string txt, bool isToolTable = false)
         {

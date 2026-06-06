@@ -17,6 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*
+ * by fclinton Bulk text-from-spreadsheet automation (xlsx import, text size/align/line, verify dimension, goto) #467
  * 2026-06-02 new helper to read .xlsx spreadsheets for Process Automation bulk jobs (uses ExcelDataReader)
  * 2026-06-02 keep multi-line cells (e.g. addresses) on one data line via "\n" placeholder
 */
